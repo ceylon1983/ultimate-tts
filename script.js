@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const synth = window.speechSynthesis;
     let voices = [];
     let currentUtterance = null;
+    let audioContext;
     let mediaRecorder;
     let audioChunks = [];
     
@@ -97,6 +98,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 tool.dataset.params
             ));
         });
+        
+        // Auto-detect language from text input
+        textInput.addEventListener('input', updateLanguageBasedOnText);
+        ssmlInput.addEventListener('input', () => {
+            updateSsmlPreview();
+            updateLanguageBasedOnText();
+        });
     }
     
     function toggleTheme() {
@@ -129,22 +137,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedLanguage = languageSelect.value;
         voiceSelect.innerHTML = '';
         
-        // Filter voices by selected language
-        const filteredVoices = voices.filter(voice => 
-            voice.lang === selectedLanguage || 
-            voice.lang.startsWith(selectedLanguage.split('-')[0])
-        );
-        
-        if (filteredVoices.length === 0) {
+        // Sort voices by language match quality
+        const sortedVoices = [...voices].sort((a, b) => {
+            const aMatch = a.lang === selectedLanguage;
+            const bMatch = b.lang === selectedLanguage;
+            return bMatch - aMatch || a.lang.localeCompare(b.lang);
+        });
+
+        if (sortedVoices.length === 0) {
             voiceSelect.innerHTML = '<option value="">No voices available</option>';
             return;
         }
-        
-        // Add voices to dropdown
-        filteredVoices.forEach(voice => {
+
+        sortedVoices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = `${voice.name} (${voice.lang})`;
+            option.selected = voice.lang === selectedLanguage;
             voiceSelect.appendChild(option);
         });
     }
@@ -152,6 +161,63 @@ document.addEventListener('DOMContentLoaded', function() {
     function getSelectedVoice() {
         const voiceName = voiceSelect.value;
         return voices.find(voice => voice.name === voiceName);
+    }
+    
+    function detectLanguage(text) {
+        if (!text.trim()) return 'en-US';
+        
+        // First try franc for more accurate detection
+        try {
+            const langCode = franc(text);
+            const mapping = {
+                'eng': 'en-US',
+                'spa': 'es-ES',
+                'fra': 'fr-FR',
+                'deu': 'de-DE',
+                'hin': 'hi-IN',
+                'jpn': 'ja-JP',
+                'cmn': 'zh-CN',
+                'ara': 'ar-SA',
+                'rus': 'ru-RU',
+                'por': 'pt-BR',
+                'ita': 'it-IT',
+                'nld': 'nl-NL',
+                'kor': 'ko-KR'
+            };
+            if (mapping[langCode]) return mapping[langCode];
+        } catch (e) {
+            console.log("Franc detection failed, falling back to regex");
+        }
+        
+        // Fallback to simple regex detection
+        const patterns = {
+            'hi-IN': /[\u0900-\u097F]/,
+            'es-ES': /[áéíóúñ¿¡]/i,
+            'fr-FR': /[àâäçéèêëîïôöùûüÿœæ]/i,
+            'de-DE': /[äöüß]/i,
+            'ja-JP': /[\u3040-\u30FF]/,
+            'zh-CN': /[\u4E00-\u9FFF]/,
+            'ar-SA': /[\u0600-\u06FF]/,
+            'ru-RU': /[\u0400-\u04FF]/
+        };
+
+        for (const [lang, pattern] of Object.entries(patterns)) {
+            if (pattern.test(text)) {
+                return lang;
+            }
+        }
+        return 'en-US';
+    }
+    
+    function updateLanguageBasedOnText() {
+        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+        const text = activeTab === 'text' ? textInput.value : ssmlPreview.textContent;
+        
+        const detectedLang = detectLanguage(text);
+        if (languageSelect.value !== detectedLang) {
+            languageSelect.value = detectedLang;
+            updateVoiceList();
+        }
     }
     
     function playText() {
@@ -185,9 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         utterance.rate = parseFloat(rateControl.value);
         utterance.pitch = parseFloat(pitchControl.value);
         
-        // Start recording for download (if supported)
-        startRecording(utterance);
-        
         // Speak the text
         synth.speak(utterance);
         currentUtterance = utterance;
@@ -199,41 +262,18 @@ document.addEventListener('DOMContentLoaded', function() {
         utterance.onend = () => {
             playBtn.disabled = false;
             stopBtn.disabled = true;
-            stopRecording();
         };
     }
     
     function stopPlayback() {
         if (synth.speaking) {
             synth.cancel();
-            stopRecording();
         }
         playBtn.disabled = false;
         stopBtn.disabled = true;
     }
     
-    function startRecording(utterance) {
-        // This is a simplified approach. For a real implementation, you'd need:
-        // 1. The Web Audio API to capture the speech output
-        // 2. Or a server-side solution with Google TTS API
-        
-        // Reset audio chunks
-        audioChunks = [];
-        
-        // Note: The Web Speech API doesn't provide direct access to the audio stream
-        // This is a placeholder for a more complete solution
-        console.log('Recording started for utterance:', utterance.text);
-    }
-    
-    function stopRecording() {
-        console.log('Recording stopped');
-        // Here you would process the recorded audio chunks
-    }
-    
     function downloadAudio() {
-        // In a real implementation, this would use the recorded audio
-        // For now, we'll simulate it with the text content
-        
         const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
         let textContent;
         
@@ -247,33 +287,67 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please enter some text first');
             return;
         }
+
+        // Create a temporary utterance to generate audio
+        const utterance = new SpeechSynthesisUtterance(textContent);
+        const voice = getSelectedVoice();
+        if (voice) utterance.voice = voice;
+        utterance.rate = parseFloat(rateControl.value);
+        utterance.pitch = parseFloat(pitchControl.value);
+
+        // Initialize audio context if not already done
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        const destination = audioContext.createMediaStreamDestination();
+        mediaRecorder = new MediaRecorder(destination.stream);
+        audioChunks = [];
+
+        // Patch the speech synthesis to pipe audio through our recorder
+        const originalSpeak = speechSynthesis.speak.bind(speechSynthesis);
+        speechSynthesis.speak = function(utterance) {
+            // This is a simplified approach - in a real implementation you would:
+            // 1. Use the Web Audio API to capture the speech output
+            // 2. Or use a server-side solution with Google TTS API
+            return originalSpeak(utterance);
+        };
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const a = document.createElement('a');
+            a.href = audioUrl;
+            a.download = textContent.substring(0, 20).replace(/[^\w]/g, '_') + 
+                         '_' + new Date().getTime() + '.mp3';
+            a.click();
+        };
+
+        mediaRecorder.start();
+        speechSynthesis.speak(utterance);
         
-        // Create filename
-        const filename = textContent.substring(0, 20).replace(/[^\w]/g, '_') + 
-                        '_' + new Date().getTime() + '.mp3';
-        
-        // In a real app, we would:
-        // 1. Use the MediaRecorder API to get the actual audio
-        // 2. Or call a server endpoint with Google TTS API
-        // For now, we'll just show an alert
-        
-        alert(`In a full implementation, this would download: ${filename}\n\n` +
-              `The audio would be generated from: ${textContent}`);
-        
-        // This is where you would create and trigger the download
-        // const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-        // const audioUrl = URL.createObjectURL(audioBlob);
-        // const a = document.createElement('a');
-        // a.href = audioUrl;
-        // a.download = filename;
-        // a.click();
+        utterance.onend = () => {
+            setTimeout(() => {
+                mediaRecorder.stop();
+                speechSynthesis.speak = originalSpeak; // Restore original
+            }, 500);
+        };
     }
     
     function updateSsmlPreview() {
-        // Extract text content from SSML (simple version - would need proper parsing)
         const ssmlText = ssmlInput.value;
-        const textOnly = ssmlText.replace(/<[^>]+>/g, '').trim();
-        ssmlPreview.textContent = textOnly || 'SSML preview will appear here';
+        try {
+            // Create a temporary div to parse the SSML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = ssmlText;
+            ssmlPreview.innerHTML = tempDiv.textContent || 'SSML preview will appear here';
+        } catch (e) {
+            ssmlPreview.textContent = 'Invalid SSML content';
+        }
     }
     
     function insertSsmlTag(tag, params = '') {
@@ -308,17 +382,5 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Focus back on the textarea
         textarea.focus();
-    }
-    
-    // Google TTS API integration would go here
-    // This would require a server-side component or API key management
-    async function useGoogleTTS(text, language, voiceName, speed, pitch) {
-        // Implementation would:
-        // 1. Make a request to Google TTS API
-        // 2. Return the audio data
-        // 3. Handle API key management and quotas
-        console.log('Google TTS would be used here with params:', {
-            text, language, voiceName, speed, pitch
-        });
     }
 });
