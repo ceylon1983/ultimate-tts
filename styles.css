@@ -1,0 +1,266 @@
+:root {
+    --primary-color: #4285f4;
+    --secondary-color: #34a853;
+    --text-color: #333;
+    --bg-color: #f9f9f9;
+    --card-color: #fff;
+    --border-color: #ddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    --primary-color: #8ab4f8;
+    --secondary-color: #81c995;
+    --text-color: #f1f1f1;
+    --bg-color: #121212;
+    --card-color: #1e1e1e;
+    --border-color: #444;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+}
+
+header h1 span {
+    color: var(--secondary-color);
+    font-weight: normal;
+}
+
+.theme-toggle button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.app-container {
+    background-color: var(--card-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.input-section {
+    padding: 20px;
+}
+
+.mode-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.tab-btn.active {
+    border-bottom: 3px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    resize: vertical;
+    font-family: 'Consolas', monospace;
+    background-color: var(--card-color);
+    color: var(--text-color);
+}
+
+.ssml-editor {
+    display: flex;
+    gap: 15px;
+}
+
+.ssml-editor textarea {
+    flex: 1;
+}
+
+.ssml-preview {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--bg-color);
+    overflow-y: auto;
+}
+
+.ssml-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.ssml-tool {
+    padding: 5px 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.tooltip {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.controls-section {
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid var(--border-color);
+}
+
+.voice-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.control-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--card-color);
+    color: var(--text-color);
+}
+
+.range-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.range-group input[type="range"] {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#playBtn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#stopBtn {
+    background-color: #ea4335;
+    color: white;
+}
+
+#downloadBtn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.ssml-cheatsheet {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.ssml-cheatsheet h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.ssml-cheatsheet ul {
+    list-style-position: inside;
+}
+
+.ssml-cheatsheet li {
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .ssml-editor {
+        flex-direction: column;
+    }
+    
+    .voice-controls {
+        grid-template-columns: 1fr;
+    }
+}
