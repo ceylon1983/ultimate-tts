@@ -6,6 +6,7 @@
     <title>Ultimate TTS for Bloggers</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/franc@6.0.0/min/franc.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -36,6 +37,7 @@
                         <button class="ssml-tool" data-tag="break" data-params='time="500ms"'>Add Pause</button>
                         <button class="ssml-tool" data-tag="emphasis" data-params='level="strong"'>Add Emphasis</button>
                         <button class="ssml-tool" data-tag="prosody" data-params='rate="slow" pitch="high"'>Adjust Prosody</button>
+                        <button class="ssml-tool" data-tag="lang" data-params='xml:lang="es-ES"'>Change Language</button>
                         <div class="tooltip">Hover over SSML tags to see explanations</div>
                     </div>
                 </div>
@@ -47,10 +49,20 @@
                         <label for="languageSelect">Language:</label>
                         <select id="languageSelect">
                             <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
                             <option value="es-ES">Spanish (Spain)</option>
+                            <option value="es-MX">Spanish (Mexico)</option>
                             <option value="fr-FR">French (France)</option>
                             <option value="de-DE">German (Germany)</option>
+                            <option value="it-IT">Italian (Italy)</option>
+                            <option value="pt-BR">Portuguese (Brazil)</option>
+                            <option value="ru-RU">Russian (Russia)</option>
                             <option value="hi-IN">Hindi (India)</option>
+                            <option value="ja-JP">Japanese (Japan)</option>
+                            <option value="zh-CN">Chinese (Mandarin)</option>
+                            <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                            <option value="ko-KR">Korean (Korea)</option>
+                            <option value="nl-NL">Dutch (Netherlands)</option>
                         </select>
                     </div>
                     
@@ -84,6 +96,7 @@
                 <li><strong>&lt;break time="500ms"/&gt;</strong> - Pause for 500 milliseconds</li>
                 <li><strong>&lt;emphasis level="strong"&gt;text&lt;/emphasis&gt;</strong> - Emphasize text</li>
                 <li><strong>&lt;prosody rate="slow" pitch="high"&gt;text&lt;/prosody&gt;</strong> - Adjust speed and pitch</li>
+                <li><strong>&lt;lang xml:lang="es-ES"&gt;text&lt;/lang&gt;</strong> - Change language for specific text</li>
                 <li><strong>&lt;say-as interpret-as="date"&gt;2023-12-25&lt;/say-as&gt;</strong> - Read as date</li>
             </ul>
         </div>
