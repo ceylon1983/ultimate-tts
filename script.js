@@ -21,9 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const synth = window.speechSynthesis;
     let voices = [];
     let currentUtterance = null;
-    let audioContext;
-    let mediaRecorder;
-    let audioChunks = [];
     
     // Initialize the app
     init();
@@ -288,54 +285,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Create a temporary utterance to generate audio
-        const utterance = new SpeechSynthesisUtterance(textContent);
-        const voice = getSelectedVoice();
-        if (voice) utterance.voice = voice;
-        utterance.rate = parseFloat(rateControl.value);
-        utterance.pitch = parseFloat(pitchControl.value);
-
-        // Initialize audio context if not already done
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        const destination = audioContext.createMediaStreamDestination();
-        mediaRecorder = new MediaRecorder(destination.stream);
-        audioChunks = [];
-
-        // Patch the speech synthesis to pipe audio through our recorder
-        const originalSpeak = speechSynthesis.speak.bind(speechSynthesis);
-        speechSynthesis.speak = function(utterance) {
-            // This is a simplified approach - in a real implementation you would:
-            // 1. Use the Web Audio API to capture the speech output
-            // 2. Or use a server-side solution with Google TTS API
-            return originalSpeak(utterance);
-        };
-
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = textContent.substring(0, 20).replace(/[^\w]/g, '_') + 
-                         '_' + new Date().getTime() + '.mp3';
-            a.click();
-        };
-
-        mediaRecorder.start();
-        speechSynthesis.speak(utterance);
+        // Inform user about the limitation
+        alert("For direct MP3 downloads, please use the 'Play' button and record your system audio. \n\nFor a complete solution with download capability, this application would need to be connected to a server-side text-to-speech service.");
         
-        utterance.onend = () => {
-            setTimeout(() => {
-                mediaRecorder.stop();
-                speechSynthesis.speak = originalSpeak; // Restore original
-            }, 500);
-        };
+        // Alternative: Provide instructions for recording
+        console.log("To record the audio output:");
+        console.log("1. Click 'Play' to hear the text");
+        console.log("2. Use system audio recording software to capture the output");
+        console.log("3. Save the recording as an MP3 file");
     }
     
     function updateSsmlPreview() {
